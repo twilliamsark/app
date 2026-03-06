@@ -1,0 +1,35 @@
+@use '@angular/material' as mat;
+
+$theme: mat.define-theme((
+  color: (
+    primary: mat.$violet-palette,
+    theme-type: dark,
+  ),
+  typography: (
+    plain-family: 'DM Sans',
+  ),
+  density: ( scale: 0 ),
+));
+
+@include mat.core();
+html {
+  @include mat.theme($theme);
+  color-scheme: dark;
+}
+@include mat.all-component-themes($theme);
+
+:root {
+  --mat-toolbar-container-background-color: #1a1d21;
+  --mat-toolbar-container-text-color: #e8eaed;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: #0f1114;
+  color: #e8eaed;
+}

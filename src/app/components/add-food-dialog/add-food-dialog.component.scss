@@ -1,0 +1,15 @@
+.full-width {
+  width: 100%;
+}
+
+.nutrient-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+
+  mat-form-field {
+    flex: 1;
+    min-width: 120px;
+  }
+}
