@@ -2,17 +2,36 @@
 <mat-dialog-content>
   <mat-form-field appearance="outline" class="full-width">
     <mat-label>Template</mat-label>
-    <mat-select [ngModel]="templateId()" (ngModelChange)="onTemplateChange($event)">
-      <mat-option [value]="null">— Select template —</mat-option>
-      @for (t of templateOptions(); track t.id) {
-        <mat-option [value]="t.id">{{ t.name }}</mat-option>
+    <input
+      matInput
+      type="text"
+      [ngModel]="templateInputValue()"
+      (ngModelChange)="onTemplateInputChange($event)"
+      [matAutocomplete]="templateAutocomplete"
+      placeholder="Type to search templates"
+      autocomplete="off"
+    />
+    <mat-autocomplete
+      #templateAutocomplete="matAutocomplete"
+      [displayWith]="displayTemplateName"
+      (optionSelected)="onTemplateOptionSelected($event.option.value)"
+    >
+      @for (t of filteredTemplateOptions(); track t.id) {
+        <mat-option [value]="t">{{ t.name }}</mat-option>
       }
-    </mat-select>
+    </mat-autocomplete>
   </mat-form-field>
 
   <mat-form-field appearance="outline" class="full-width">
     <mat-label>Date</mat-label>
-    <input matInput type="date" [ngModel]="date()" (ngModelChange)="date.set($event)" />
+    <input
+      matInput
+      [matDatepicker]="datePicker"
+      [ngModel]="dateValue()"
+      (ngModelChange)="dateValue.set($event)"
+    />
+    <mat-datepicker-toggle matIconSuffix [for]="datePicker" />
+    <mat-datepicker #datePicker />
   </mat-form-field>
 
   <mat-form-field appearance="outline" class="full-width">

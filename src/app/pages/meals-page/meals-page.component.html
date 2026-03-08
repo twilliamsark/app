@@ -19,25 +19,48 @@
 
   <p class="hint">Create a meal instance from a template for a specific date and set servings per food.</p>
 
-  <div class="cards">
-    @for (m of instancesWithAggregates(); track m.id) {
-      <mat-card class="meal-card">
-        <mat-card-header>
-          <mat-card-title>{{ m.name }}</mat-card-title>
-          <mat-card-subtitle>{{ m.date }} · {{ m.templateName }}</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="aggregates" aria-label="Totals for this meal">
-            <span>Cal {{ m.aggregates.calories }}</span>
-            <span>Na {{ m.aggregates.sodium }}</span>
-            <span>P {{ m.aggregates.protein }}</span>
-            <span>Net carbs {{ m.aggregates.netCarbs }}</span>
-          </div>
-        </mat-card-content>
-        <mat-card-actions>
-          <button mat-button color="warn" (click)="deleteInstance(m.id)">Delete</button>
-        </mat-card-actions>
-      </mat-card>
+  <div class="day-rows">
+    @for (row of daysWithSummaries(); track row.date) {
+      <div class="day-group">
+        <span class="day-group-label">{{ row.date }}</span>
+        <div class="day-row">
+          <div class="day-meals">
+          @for (m of row.instances; track m.id) {
+            <mat-card class="meal-card">
+              <mat-card-header>
+                <mat-card-title>{{ m.name }}</mat-card-title>
+                <mat-card-subtitle>{{ m.templateName }}</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="aggregates" aria-label="Totals for this meal">
+                  <span>Cal {{ m.aggregates.calories }}</span>
+                  <span>Na {{ m.aggregates.sodium }}</span>
+                  <span>P {{ m.aggregates.protein }}</span>
+                  <span>Net carbs {{ m.aggregates.netCarbs }}</span>
+                </div>
+              </mat-card-content>
+              <mat-card-actions>
+                <button mat-button color="warn" (click)="deleteInstance(m.id)">Delete</button>
+              </mat-card-actions>
+            </mat-card>
+          }
+        </div>
+        <mat-card class="summary-card" aria-label="Day total for {{ row.date }}">
+          <mat-card-header>
+            <mat-card-title>{{ row.date }}</mat-card-title>
+            <mat-card-subtitle>Day total</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="aggregates">
+              <span>Cal {{ row.dayAggregates.calories }}</span>
+              <span>Na {{ row.dayAggregates.sodium }}</span>
+              <span>P {{ row.dayAggregates.protein }}</span>
+              <span>Net carbs {{ row.dayAggregates.netCarbs }}</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+        </div>
+      </div>
     } @empty {
       <p class="empty">No meal instances yet. Create one by choosing a template and date.</p>
     }

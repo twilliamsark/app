@@ -9,12 +9,17 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
+import { Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { StorageService } from '../../services/storage.service';
 import { TemplateBuilderService } from '../../services/template-builder.service';
 import { aggregateNutrients } from '../../models/food.model';
 import type { MealTemplateWithFoods } from '../../models/meal-template.model';
 import { TemplateEditDialogComponent } from '../../components/template-edit-dialog/template-edit-dialog.component';
+import {
+  InstanceCreateDialogComponent,
+  InstanceCreateDialogData,
+} from '../../components/instance-create-dialog/instance-create-dialog.component';
 
 @Component({
   selector: 'app-templates-page',
@@ -27,6 +32,7 @@ export class TemplatesPageComponent implements OnInit {
   private readonly storage = inject(StorageService);
   private readonly templateBuilder = inject(TemplateBuilderService);
   private readonly dialog = inject(MatDialog);
+  private readonly router = inject(Router);
 
   readonly templatesWithAggregates = computed<MealTemplateWithFoods[]>(() => {
     const templates = this.storage.templates();
@@ -66,10 +72,32 @@ export class TemplatesPageComponent implements OnInit {
       data: { name: '', items: initialItems ?? [] },
     });
     ref.afterClosed().subscribe((result) => {
-      if (result?.name != null) {
-        this.storage.addTemplate({
-          name: result.name,
-          items: result.items ?? [],
+      if (result?.name == null) return;
+      const template = this.storage.addTemplate({
+        name: result.name,
+        items: result.items ?? [],
+      });
+      if (result.createMeal) {
+        this.router.navigate(['/meals']);
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        const instanceRef = this.dialog.open(InstanceCreateDialogComponent, {
+          width: 'min(90vw, 560px)',
+          data: { templateId: template.id, date: dateStr } satisfies InstanceCreateDialogData,
+        });
+        instanceRef.afterClosed().subscribe((instanceResult) => {
+          if (
+            instanceResult?.date != null &&
+            instanceResult?.templateId != null &&
+            instanceResult?.name != null
+          ) {
+            this.storage.addInstance({
+              templateId: instanceResult.templateId,
+              date: instanceResult.date,
+              name: instanceResult.name,
+              items: instanceResult.items ?? [],
+            });
+          }
         });
       }
     });

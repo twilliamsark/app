@@ -11,13 +11,19 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
 import { StorageService } from '../../services/storage.service';
-import { aggregateNutrients } from '../../models/food.model';
+import { aggregateNutrients, type FoodNutrients } from '../../models/food.model';
 import type { MealInstance } from '../../models/meal-instance.model';
 import { InstanceCreateDialogComponent } from '../../components/instance-create-dialog/instance-create-dialog.component';
 
 interface InstanceWithAggregates extends MealInstance {
-  aggregates: ReturnType<typeof aggregateNutrients>;
+  aggregates: FoodNutrients;
   templateName: string;
+}
+
+export interface DayRow {
+  date: string;
+  instances: InstanceWithAggregates[];
+  dayAggregates: FoodNutrients;
 }
 
 @Component({
@@ -55,6 +61,50 @@ export class MealsPageComponent {
         };
       })
       .sort((a, b) => b.date.localeCompare(a.date));
+  });
+
+  readonly daysWithSummaries = computed<DayRow[]>(() => {
+    const list = this.instancesWithAggregates();
+    if (list.length === 0) return [];
+    const rows: DayRow[] = [];
+    let currentDate = list[0].date;
+    let currentInstances: InstanceWithAggregates[] = [];
+    const zero: FoodNutrients = {
+      calories: 0,
+      sodium: 0,
+      protein: 0,
+      totalCarbs: 0,
+      fiberCarbs: 0,
+      netCarbs: 0,
+      sugarCarbs: 0,
+    };
+    const sumAggregates = (a: FoodNutrients, b: FoodNutrients): FoodNutrients => ({
+      calories: a.calories + b.calories,
+      sodium: a.sodium + b.sodium,
+      protein: a.protein + b.protein,
+      totalCarbs: a.totalCarbs + b.totalCarbs,
+      fiberCarbs: a.fiberCarbs + b.fiberCarbs,
+      netCarbs: a.netCarbs + b.netCarbs,
+      sugarCarbs: a.sugarCarbs + b.sugarCarbs,
+    });
+    const flush = (date: string, instances: InstanceWithAggregates[]) => {
+      if (instances.length === 0) return;
+      const dayAggregates = instances.reduce(
+        (acc, m) => sumAggregates(acc, m.aggregates),
+        zero
+      );
+      rows.push({ date, instances, dayAggregates });
+    };
+    for (const m of list) {
+      if (m.date !== currentDate) {
+        flush(currentDate, currentInstances);
+        currentDate = m.date;
+        currentInstances = [];
+      }
+      currentInstances.push(m);
+    }
+    flush(currentDate, currentInstances);
+    return rows;
   });
 
   openCreateDialog(): void {

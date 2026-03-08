@@ -8,12 +8,24 @@
   <div class="add-row">
     <mat-form-field appearance="outline" class="food-select">
       <mat-label>Add food</mat-label>
-      <mat-select [ngModel]="selectedFoodIdToAdd()" (ngModelChange)="selectedFoodIdToAdd.set($event)">
-        <mat-option [value]="null">—</mat-option>
-        @for (f of foodOptions(); track f.id) {
-          <mat-option [value]="f.id">{{ f.name }}</mat-option>
+      <input
+        matInput
+        type="text"
+        [ngModel]="addFoodInputValue()"
+        (ngModelChange)="onAddFoodInputChange($event)"
+        [matAutocomplete]="addFoodAutocomplete"
+        placeholder="Type to search foods"
+        autocomplete="off"
+      />
+      <mat-autocomplete
+        #addFoodAutocomplete="matAutocomplete"
+        [displayWith]="displayFoodName"
+        (optionSelected)="onAddFoodOptionSelected($event.option.value)"
+      >
+        @for (f of filteredFoodOptions(); track f.id) {
+          <mat-option [value]="f">{{ f.name }}</mat-option>
         }
-      </mat-select>
+      </mat-autocomplete>
     </mat-form-field>
     <button mat-flat-button color="primary" (click)="addItem()" type="button">Add</button>
   </div>
@@ -39,6 +51,14 @@
       </div>
     }
   </div>
+
+  @if (!data.id) {
+    <div class="create-meal-option">
+      <mat-checkbox [ngModel]="createMeal()" (ngModelChange)="createMeal.set($event)">
+        Make a meal from this template after saving
+      </mat-checkbox>
+    </div>
+  }
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button (click)="cancel()">Cancel</button>
