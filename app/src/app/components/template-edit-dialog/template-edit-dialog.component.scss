@@ -1,0 +1,43 @@
+.full-width {
+  width: 100%;
+}
+
+.add-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+
+  .food-select {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.create-meal-option {
+  margin-top: 1rem;
+}
+
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.item-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+
+  .item-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .servings {
+    width: 100px;
+  }
+}

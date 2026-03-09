@@ -1,0 +1,25 @@
+---
+description: Use angularstart-quicklists repo as the reference for Angular patterns in this project
+globs: app/src/**/*.ts
+alwaysApply: false
+---
+
+# Angular reference: angularstart-quicklists
+
+Use [joshuamorony/angularstart-quicklists](https://github.com/joshuamorony/angularstart-quicklists) as the example of good code when writing or refactoring Angular in this project.
+
+## Patterns to follow
+
+- **Standalone components** with `inject()` for DI (no constructor injection for services).
+- **Signals** for component state: `signal()`, `computed()`, `effect()`; use `toSignal()` for route params or Observables.
+- **Lazy routes**: `loadComponent: () => import('./feature/feature.component')` and **default export** on the component for cleaner imports.
+- **Feature structure**: group by feature (e.g. `home/`, `checklist/`), with `data-access/` services and `ui/` presentational components; put shared code in `shared/` (interfaces, `data-access/`, `ui/`).
+- **Reactive forms**: `FormBuilder.nonNullable.group()` for type-safe forms; sync form with editing state in an `effect()` (reset when no selection, patch when editing).
+- **App config**: Prefer `provideZonelessChangeDetection()` when appropriate; use `takeUntilDestroyed()` in services for RxJS subscriptions; consider `linkedSignal` for state derived from async sources.
+
+## Don’t
+
+- Don’t use `(ionChange)` alone for list selection when the control can be unreliable; prefer a single click handler on the row (or a single source of truth) and bind the control’s value from state.
+- Don’t mix NgModules with standalone in new code; keep everything standalone.
+
+When in doubt, mirror structure and patterns from the quicklists repo (services, component layout, signals, and routing).
