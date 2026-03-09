@@ -37,10 +37,14 @@
       <mat-label>Min protein</mat-label>
       <input matInput type="number" min="0" step="1" [ngModel]="minProtein()" (ngModelChange)="minProtein.set($event === '' ? null : +$event)" />
     </mat-form-field>
+    <button mat-stroked-button (click)="clearFilters()" aria-label="Clear filters">
+      <mat-icon>clear</mat-icon>
+      Clear filters
+    </button>
   </div>
 
   <div class="table-wrap">
-    <table mat-table [dataSource]="filteredFoods()" class="food-table">
+    <table mat-table [dataSource]="dataSource" matSort class="food-table">
       <ng-container matColumnDef="select">
         <th mat-header-cell *matHeaderCellDef>
           <mat-checkbox
@@ -59,35 +63,35 @@
         </td>
       </ng-container>
       <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="name">Name</th>
         <td mat-cell *matCellDef="let row">{{ row.name }}</td>
       </ng-container>
       <ng-container matColumnDef="calories">
-        <th mat-header-cell *matHeaderCellDef>Cal</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="calories">Cal</th>
         <td mat-cell *matCellDef="let row">{{ row.calories }}</td>
       </ng-container>
       <ng-container matColumnDef="sodium">
-        <th mat-header-cell *matHeaderCellDef>Sodium</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="sodium">Sodium</th>
         <td mat-cell *matCellDef="let row">{{ row.sodium }}</td>
       </ng-container>
       <ng-container matColumnDef="protein">
-        <th mat-header-cell *matHeaderCellDef>Protein</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="protein">Protein</th>
         <td mat-cell *matCellDef="let row">{{ row.protein }}</td>
       </ng-container>
       <ng-container matColumnDef="totalCarbs">
-        <th mat-header-cell *matHeaderCellDef>Total carbs</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="totalCarbs">Total carbs</th>
         <td mat-cell *matCellDef="let row">{{ row.totalCarbs }}</td>
       </ng-container>
       <ng-container matColumnDef="fiberCarbs">
-        <th mat-header-cell *matHeaderCellDef>Fiber</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="fiberCarbs">Fiber</th>
         <td mat-cell *matCellDef="let row">{{ row.fiberCarbs }}</td>
       </ng-container>
       <ng-container matColumnDef="netCarbs">
-        <th mat-header-cell *matHeaderCellDef>Net carbs</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="netCarbs">Net carbs</th>
         <td mat-cell *matCellDef="let row">{{ row.netCarbs }}</td>
       </ng-container>
       <ng-container matColumnDef="sugarCarbs">
-        <th mat-header-cell *matHeaderCellDef>Sugar</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="sugarCarbs">Sugar</th>
         <td mat-cell *matCellDef="let row">{{ row.sugarCarbs }}</td>
       </ng-container>
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

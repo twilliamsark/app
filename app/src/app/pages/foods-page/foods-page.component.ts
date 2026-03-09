@@ -3,12 +3,16 @@ import {
   inject,
   signal,
   computed,
+  effect,
   ChangeDetectionStrategy,
+  ViewChild,
+  AfterViewInit,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
@@ -30,6 +34,7 @@ import type { Food } from '../../models/food.model';
     MatFormFieldModule,
     MatInputModule,
     MatTableModule,
+    MatSortModule,
     MatButtonModule,
     MatIconModule,
     MatSlideToggleModule,
@@ -39,7 +44,9 @@ import type { Food } from '../../models/food.model';
   templateUrl: './foods-page.component.html',
   styleUrl: './foods-page.component.scss',
 })
-export class FoodsPageComponent {
+export class FoodsPageComponent implements AfterViewInit {
+  @ViewChild(MatSort) sort!: MatSort;
+
   private readonly storage = inject(StorageService);
   private readonly csv = inject(CsvService);
   private readonly templateBuilder = inject(TemplateBuilderService);
@@ -51,6 +58,8 @@ export class FoodsPageComponent {
   readonly maxNetCarbs = signal<number | null>(null);
   readonly minProtein = signal<number | null>(null);
   readonly selectedIds = signal<Set<string>>(new Set());
+
+  readonly dataSource = new MatTableDataSource<Food>([]);
 
   readonly filteredFoods = computed(() => {
     let list = this.storage.foods();
@@ -72,6 +81,23 @@ export class FoodsPageComponent {
     }
     return list;
   });
+
+  constructor() {
+    effect(() => {
+      this.dataSource.data = this.filteredFoods();
+    });
+  }
+
+  ngAfterViewInit(): void {
+    if (this.sort) this.dataSource.sort = this.sort;
+  }
+
+  clearFilters(): void {
+    this.searchQuery.set('');
+    this.maxCalories.set(null);
+    this.maxNetCarbs.set(null);
+    this.minProtein.set(null);
+  }
 
   readonly displayedColumns = [
     'select',
