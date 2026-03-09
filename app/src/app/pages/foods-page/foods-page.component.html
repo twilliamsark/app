@@ -94,6 +94,17 @@
         <th mat-header-cell *matHeaderCellDef mat-sort-header="sugarCarbs">Sugar</th>
         <td mat-cell *matCellDef="let row">{{ row.sugarCarbs }}</td>
       </ng-container>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let row" class="actions-cell">
+          <button mat-icon-button (click)="openEditFoodDialog(row)" [attr.aria-label]="'Edit ' + row.name" type="button">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button (click)="deleteFood(row)" [attr.aria-label]="'Delete ' + row.name" type="button">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
     </table>

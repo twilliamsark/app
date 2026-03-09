@@ -185,4 +185,115 @@ describe('FoodsPageComponent', () => {
       queryParams: { new: '1' },
     });
   });
+
+  it('openEditFoodDialog opens dialog with food data and updates on save', () => {
+    const food = storage.addFood({
+      name: 'Eggs',
+      calories: 70,
+      sodium: 60,
+      protein: 6,
+      totalCarbs: 0,
+      fiberCarbs: 0,
+      netCarbs: 0,
+      sugarCarbs: 0,
+    });
+    fixture.detectChanges();
+
+    const updateSpy = vi.spyOn(storage, 'updateFood');
+    dialogOpenSpy.mockReturnValue({
+      afterClosed: () =>
+        of({
+          id: food.id,
+          name: 'Scrambled Eggs',
+          calories: 90,
+          sodium: 60,
+          protein: 6,
+          totalCarbs: 0,
+          fiberCarbs: 0,
+          netCarbs: 0,
+          sugarCarbs: 0,
+        }),
+    });
+
+    component.openEditFoodDialog(food);
+
+    expect(dialogOpenSpy).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        data: { food },
+      }),
+    );
+    expect(updateSpy).toHaveBeenCalledWith(food.id, {
+      name: 'Scrambled Eggs',
+      calories: 90,
+      sodium: 60,
+      protein: 6,
+      totalCarbs: 0,
+      fiberCarbs: 0,
+      netCarbs: 0,
+      sugarCarbs: 0,
+    });
+  });
+
+  it('deleteFood removes food when confirmed', () => {
+    const food = storage.addFood({
+      name: 'Eggs',
+      calories: 70,
+      sodium: 60,
+      protein: 6,
+      totalCarbs: 0,
+      fiberCarbs: 0,
+      netCarbs: 0,
+      sugarCarbs: 0,
+    });
+    fixture.detectChanges();
+
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    component.deleteFood(food);
+
+    expect(storage.foods()).toHaveLength(0);
+  });
+
+  it('deleteFood does nothing when confirmation is cancelled', () => {
+    const food = storage.addFood({
+      name: 'Eggs',
+      calories: 70,
+      sodium: 60,
+      protein: 6,
+      totalCarbs: 0,
+      fiberCarbs: 0,
+      netCarbs: 0,
+      sugarCarbs: 0,
+    });
+    fixture.detectChanges();
+
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+    component.deleteFood(food);
+
+    expect(storage.foods()).toHaveLength(1);
+  });
+
+  it('deleteFood removes food from selection when selected', () => {
+    const food = storage.addFood({
+      name: 'Eggs',
+      calories: 70,
+      sodium: 60,
+      protein: 6,
+      totalCarbs: 0,
+      fiberCarbs: 0,
+      netCarbs: 0,
+      sugarCarbs: 0,
+    });
+    fixture.detectChanges();
+
+    component.toggleSelect(food.id);
+    expect(component.selectedIds().has(food.id)).toBe(true);
+
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    component.deleteFood(food);
+
+    expect(component.selectedIds().has(food.id)).toBe(false);
+  });
 });

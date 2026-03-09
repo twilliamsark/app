@@ -18,7 +18,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialogModule } from '@angular/material/dialog';
-import { AddFoodDialogComponent } from '../../components/add-food-dialog/add-food-dialog.component';
+import { AddFoodDialogComponent, AddFoodDialogData } from '../../components/add-food-dialog/add-food-dialog.component';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { StorageService } from '../../services/storage.service';
@@ -109,6 +109,7 @@ export class FoodsPageComponent implements AfterViewInit {
     'fiberCarbs',
     'netCarbs',
     'sugarCarbs',
+    'actions',
   ];
 
   toggleSelect(id: string): void {
@@ -184,7 +185,35 @@ export class FoodsPageComponent implements AfterViewInit {
       width: 'min(90vw, 520px)',
     });
     ref.afterClosed().subscribe((result) => {
-      if (result) this.storage.addFood(result);
+      if (!result) return;
+      if ('id' in result && result.id) {
+        const { id, ...patch } = result;
+        this.storage.updateFood(id, patch);
+      } else {
+        this.storage.addFood(result);
+      }
+    });
+  }
+
+  openEditFoodDialog(food: Food): void {
+    const ref = this.dialog.open(AddFoodDialogComponent, {
+      width: 'min(90vw, 520px)',
+      data: { food } satisfies AddFoodDialogData,
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (!result || !('id' in result)) return;
+      const { id, ...patch } = result;
+      this.storage.updateFood(id, patch);
+    });
+  }
+
+  deleteFood(food: Food): void {
+    if (!confirm(`Delete "${food.name}"? This cannot be undone.`)) return;
+    this.storage.deleteFood(food.id);
+    this.selectedIds.update((set) => {
+      const next = new Set(set);
+      next.delete(food.id);
+      return next;
     });
   }
 }

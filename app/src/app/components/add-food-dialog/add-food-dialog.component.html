@@ -1,4 +1,4 @@
-<h2 mat-dialog-title>Add food</h2>
+<h2 mat-dialog-title>{{ isEdit ? 'Edit food' : 'Add food' }}</h2>
 <form [formGroup]="form" (ngSubmit)="save()">
   <mat-dialog-content>
     <mat-form-field appearance="outline" class="full-width">
@@ -44,7 +44,7 @@
   <mat-dialog-actions align="end">
     <button mat-button type="button" (click)="cancel()">Cancel</button>
     <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">
-      Add
+      {{ isEdit ? 'Save' : 'Add' }}
     </button>
   </mat-dialog-actions>
 </form>

@@ -68,6 +68,14 @@
   .mat-mdc-checkbox {
     margin-right: 0.25rem;
   }
+
+  .actions-cell {
+    white-space: nowrap;
+
+    button {
+      margin: 0 2px;
+    }
+  }
 }
 
 .selected-actions {
