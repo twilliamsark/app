@@ -6,6 +6,7 @@
     "build": "npm run build --prefix app",
     "watch": "npm run watch --prefix app",
     "test": "npm run test --prefix app",
-    "ng": "npm run ng --prefix app"
+    "ng": "npm run ng --prefix app",
+    "deploy": "npm run build && firebase deploy --only hosting"
   }
 }
