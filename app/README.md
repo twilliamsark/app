@@ -1,6 +1,6 @@
 # Nutrition App
 
-Angular app for tracking foods, meal templates, and daily meal instances. Data is stored in the browser (localStorage). Initial food data loads from `public/jonesboro_nutrition.csv`.
+Angular app for tracking foods, meal templates, and daily meal instances. Data is stored in the browser (localStorage).
 
 **Features:** Food list (searchable and filterable), CSV import/export for foods (import creates/updates only, no deletes), meal templates (group foods with default 1 serving, CSV import/export), meal instances (from a template for a date with custom servings), and aggregate nutrition (calories, sodium, protein, net carbs) for templates and instances.
 
