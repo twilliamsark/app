@@ -56,6 +56,7 @@ apple,50,0,0,14,2,12,10`;
       const food: Food = {
         id: 'id1',
         name: 'Test Food',
+        servingTime: 'any',
         calories: 100,
         sodium: 200,
         protein: 10,
@@ -69,7 +70,7 @@ apple,50,0,0,14,2,12,10`;
       expect(row).toContain('Test Food');
       expect(row).toContain('100');
       const fullCsv = service.foodsToCsv([food]);
-      expect(fullCsv).toContain('id,name,calories');
+      expect(fullCsv).toContain('id,name,serving time,calories');
       expect(fullCsv).toContain('Test Food');
     });
 
@@ -77,6 +78,7 @@ apple,50,0,0,14,2,12,10`;
       const food: Food = {
         id: '1',
         name: 'Bread, whole wheat',
+        servingTime: 'lunch',
         calories: 70,
         sodium: 130,
         protein: 3,
@@ -96,13 +98,14 @@ apple,50,0,0,14,2,12,10`;
         {
           id: 't1',
           name: 'Breakfast',
+          servingTime: 'breakfast',
           items: [{ foodId: 'f1', servings: 1 }],
           createdAt: 1000,
           updatedAt: 2000,
         },
       ];
       const csv = service.templatesToCsv(templates);
-      expect(csv).toContain('id,name,createdAt,updatedAt,itemsJson');
+      expect(csv).toContain('id,name,servingTime,createdAt,updatedAt,itemsJson');
       expect(csv).toContain('Breakfast');
       const parsed = service.parseTemplatesCsv(csv);
       expect(parsed).toHaveLength(1);
@@ -119,6 +122,7 @@ apple,50,0,0,14,2,12,10`;
           templateId: 't1',
           date: '2025-03-05',
           name: 'Lunch',
+          servingTime: 'lunch',
           items: [{ foodId: 'f1', servings: 2 }],
           createdAt: 1000,
           updatedAt: 2000,

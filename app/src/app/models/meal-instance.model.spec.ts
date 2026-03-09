@@ -17,6 +17,7 @@ describe('meal-instance.model', () => {
         templateId: 't1',
         date: '2025-03-05',
         name: 'Lunch',
+        servingTime: 'lunch',
         items: [{ foodId: 'f1', servings: 1 }],
         createdAt: 1000,
         updatedAt: 2000,

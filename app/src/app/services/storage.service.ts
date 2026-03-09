@@ -3,6 +3,7 @@ import { signal, computed } from '@angular/core';
 import type { Food } from '../models/food.model';
 import type { MealTemplate } from '../models/meal-template.model';
 import type { MealInstance } from '../models/meal-instance.model';
+import { DEFAULT_SERVING_TIME } from '../models/serving-time.model';
 import { CsvService } from './csv.service';
 
 const FOODS_KEY = 'nutrition_foods';
@@ -37,14 +38,35 @@ export class StorageService {
   private loadFromStorage(): void {
     try {
       const f = localStorage.getItem(FOODS_KEY);
-      if (f) this.foodsSignal.set(JSON.parse(f));
+      if (f) this.foodsSignal.set(this.normalizeFoods(JSON.parse(f)));
       const t = localStorage.getItem(TEMPLATES_KEY);
-      if (t) this.templatesSignal.set(JSON.parse(t));
+      if (t) this.templatesSignal.set(this.normalizeTemplates(JSON.parse(t)));
       const i = localStorage.getItem(INSTANCES_KEY);
-      if (i) this.instancesSignal.set(JSON.parse(i));
+      if (i) this.instancesSignal.set(this.normalizeInstances(JSON.parse(i)));
     } catch {
       // ignore
     }
+  }
+
+  private normalizeFoods(list: Food[]): Food[] {
+    return list.map((x) => ({
+      ...x,
+      servingTime: x.servingTime ?? DEFAULT_SERVING_TIME,
+    }));
+  }
+
+  private normalizeTemplates(list: MealTemplate[]): MealTemplate[] {
+    return list.map((x) => ({
+      ...x,
+      servingTime: x.servingTime ?? DEFAULT_SERVING_TIME,
+    }));
+  }
+
+  private normalizeInstances(list: MealInstance[]): MealInstance[] {
+    return list.map((x) => ({
+      ...x,
+      servingTime: x.servingTime ?? DEFAULT_SERVING_TIME,
+    }));
   }
 
   private persistFoods(): void {
@@ -59,24 +81,29 @@ export class StorageService {
     localStorage.setItem(INSTANCES_KEY, JSON.stringify(this.instancesSignal()));
   }
 
-  mergeFoods(foods: Omit<Food, 'id'>[]): void {
+  mergeFoods(
+    foods: (Omit<Food, 'id' | 'servingTime'> & { servingTime?: Food['servingTime'] })[],
+  ): void {
     const byName = new Map(this.foodsSignal().map((f) => [f.name.toLowerCase().trim(), f]));
     const next: Food[] = [...this.foodsSignal()];
     for (const row of foods) {
       const key = row.name.toLowerCase().trim();
       const existing = byName.get(key);
+      const servingTime = row.servingTime ?? DEFAULT_SERVING_TIME;
       if (existing) {
         const idx = next.findIndex((x) => x.id === existing.id);
         if (idx >= 0)
           next[idx] = {
             ...existing,
             ...row,
+            servingTime,
           };
         byName.set(key, next[idx]!);
       } else {
         const newFood: Food = {
           id: genId(),
           ...row,
+          servingTime,
         };
         next.push(newFood);
         byName.set(key, newFood);
@@ -86,8 +113,12 @@ export class StorageService {
     this.persistFoods();
   }
 
-  addFood(food: Omit<Food, 'id'>): Food {
-    const newFood: Food = { ...food, id: genId() };
+  addFood(food: Omit<Food, 'id' | 'servingTime'> & { servingTime?: Food['servingTime'] }): Food {
+    const newFood: Food = {
+      ...food,
+      servingTime: food.servingTime ?? DEFAULT_SERVING_TIME,
+      id: genId(),
+    };
     this.foodsSignal.update((list) => [...list, newFood]);
     this.persistFoods();
     return newFood;
@@ -103,10 +134,15 @@ export class StorageService {
     this.persistFoods();
   }
 
-  addTemplate(template: Omit<MealTemplate, 'id' | 'createdAt' | 'updatedAt'>): MealTemplate {
+  addTemplate(
+    template: Omit<MealTemplate, 'id' | 'createdAt' | 'updatedAt' | 'servingTime'> & {
+      servingTime?: MealTemplate['servingTime'];
+    },
+  ): MealTemplate {
     const now = Date.now();
     const t: MealTemplate = {
       ...template,
+      servingTime: template.servingTime ?? DEFAULT_SERVING_TIME,
       id: genId(),
       createdAt: now,
       updatedAt: now,
@@ -129,10 +165,15 @@ export class StorageService {
     this.persistTemplates();
   }
 
-  addInstance(instance: Omit<MealInstance, 'id' | 'createdAt' | 'updatedAt'>): MealInstance {
+  addInstance(
+    instance: Omit<MealInstance, 'id' | 'createdAt' | 'updatedAt' | 'servingTime'> & {
+      servingTime?: MealInstance['servingTime'];
+    },
+  ): MealInstance {
     const now = Date.now();
     const i: MealInstance = {
       ...instance,
+      servingTime: instance.servingTime ?? DEFAULT_SERVING_TIME,
       id: genId(),
       createdAt: now,
       updatedAt: now,

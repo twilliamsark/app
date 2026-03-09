@@ -15,7 +15,9 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatSelectModule } from '@angular/material/select';
 import { StorageService } from '../../services/storage.service';
+import { DEFAULT_SERVING_TIME, SERVING_TIMES } from '../../models/serving-time.model';
 
 export interface InstanceCreateDialogData {
   templateId?: string;
@@ -29,6 +31,7 @@ export interface InstanceCreateDialogData {
     FormsModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     MatButtonModule,
     MatAutocompleteModule,
     MatDatepickerModule,
@@ -51,6 +54,8 @@ export class InstanceCreateDialogComponent implements OnInit {
   /** Date for the picker (bound to mat-datepicker). */
   readonly dateValue = signal<Date>(new Date());
   readonly name = signal('');
+  readonly servingTime = signal<(typeof SERVING_TIMES)[number]>(DEFAULT_SERVING_TIME);
+  readonly servingTimes = SERVING_TIMES;
   readonly items = signal<{ foodId: string; servings: number }[]>([]);
 
   ngOnInit(): void {
@@ -132,12 +137,14 @@ export class InstanceCreateDialogComponent implements OnInit {
     if (!templateId) {
       this.items.set([]);
       this.name.set('');
+      this.servingTime.set(DEFAULT_SERVING_TIME);
       return;
     }
     const t = this.storage.templates().find((x) => x.id === templateId);
     if (t) {
       this.items.set(t.items.map((it) => ({ ...it })));
       this.name.set(t.name);
+      this.servingTime.set((t.servingTime ?? DEFAULT_SERVING_TIME) as (typeof SERVING_TIMES)[number]);
     }
   }
 
@@ -157,6 +164,7 @@ export class InstanceCreateDialogComponent implements OnInit {
       templateId: tid,
       date: this.dateToStr(dateObj),
       name: n,
+      servingTime: this.servingTime(),
       items: this.items().filter((it) => it.servings > 0),
     });
   }

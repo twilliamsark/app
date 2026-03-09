@@ -14,6 +14,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { StorageService } from '../../services/storage.service';
 import { TemplateBuilderService } from '../../services/template-builder.service';
 import { aggregateNutrients } from '../../models/food.model';
+import { DEFAULT_SERVING_TIME } from '../../models/serving-time.model';
 import type { MealTemplateWithFoods } from '../../models/meal-template.model';
 import { TemplateEditDialogComponent } from '../../components/template-edit-dialog/template-edit-dialog.component';
 import {
@@ -59,22 +60,36 @@ export class TemplatesPageComponent implements OnInit {
     if (params.get('new') === '1') {
       const selection = this.templateBuilder.getSelection();
       if (selection.length > 0) {
-        this.openCreateDialog(selection.map((id) => ({ foodId: id, servings: 1 })));
+        const foodById = this.storage.foodById();
+        const firstFood = foodById.get(selection[0]!);
+        const servingTime = firstFood?.servingTime ?? DEFAULT_SERVING_TIME;
+        this.openCreateDialog(
+          selection.map((id) => ({ foodId: id, servings: 1 })),
+          servingTime,
+        );
         this.templateBuilder.clearSelection();
         window.history.replaceState({}, '', '/templates');
       }
     }
   }
 
-  openCreateDialog(initialItems?: { foodId: string; servings: number }[]): void {
+  openCreateDialog(
+    initialItems?: { foodId: string; servings: number }[],
+    initialServingTime?: string,
+  ): void {
     const ref = this.dialog.open(TemplateEditDialogComponent, {
       width: 'min(90vw, 560px)',
-      data: { name: '', items: initialItems ?? [] },
+      data: {
+        name: '',
+        servingTime: initialServingTime ?? DEFAULT_SERVING_TIME,
+        items: initialItems ?? [],
+      },
     });
     ref.afterClosed().subscribe((result) => {
       if (result?.name == null) return;
       const template = this.storage.addTemplate({
         name: result.name,
+        servingTime: result.servingTime ?? DEFAULT_SERVING_TIME,
         items: result.items ?? [],
       });
       if (result.createMeal) {
@@ -95,6 +110,7 @@ export class TemplatesPageComponent implements OnInit {
               templateId: instanceResult.templateId,
               date: instanceResult.date,
               name: instanceResult.name,
+              servingTime: instanceResult.servingTime ?? DEFAULT_SERVING_TIME,
               items: instanceResult.items ?? [],
             });
           }
@@ -109,6 +125,7 @@ export class TemplatesPageComponent implements OnInit {
       data: {
         id: template.id,
         name: template.name,
+        servingTime: template.servingTime ?? DEFAULT_SERVING_TIME,
         items: template.items.map((it) => ({ foodId: it.foodId, servings: it.servings })),
       },
     });
@@ -116,6 +133,7 @@ export class TemplatesPageComponent implements OnInit {
       if (result != null && result.name != null && template.id) {
         this.storage.updateTemplate(template.id, {
           name: result.name,
+          servingTime: result.servingTime,
           items: result.items ?? template.items,
         });
       }

@@ -8,6 +8,14 @@
         <mat-error>Name is required</mat-error>
       }
     </mat-form-field>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Serving time</mat-label>
+      <mat-select formControlName="servingTime">
+        @for (st of servingTimes; track st) {
+          <mat-option [value]="st">{{ st }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
     <div class="nutrient-row">
       <mat-form-field appearance="outline">
         <mat-label>Calories</mat-label>

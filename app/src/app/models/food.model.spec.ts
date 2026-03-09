@@ -6,6 +6,7 @@ describe('food.model', () => {
   const foodA: Food = {
     id: '1',
     name: 'Eggs',
+    servingTime: 'breakfast',
     calories: 70,
     sodium: 60,
     protein: 6,
@@ -18,6 +19,7 @@ describe('food.model', () => {
   const foodB: Food = {
     id: '2',
     name: 'Oatmeal',
+    servingTime: 'breakfast',
     calories: 150,
     sodium: 0,
     protein: 5,

@@ -14,6 +14,7 @@ import { StorageService } from '../../services/storage.service';
 import { aggregateNutrients, type FoodNutrients } from '../../models/food.model';
 import type { MealInstance } from '../../models/meal-instance.model';
 import { InstanceCreateDialogComponent } from '../../components/instance-create-dialog/instance-create-dialog.component';
+import { DEFAULT_SERVING_TIME } from '../../models/serving-time.model';
 
 interface InstanceWithAggregates extends MealInstance {
   aggregates: FoodNutrients;
@@ -118,6 +119,7 @@ export class MealsPageComponent {
           templateId: result.templateId,
           date: result.date,
           name: result.name,
+          servingTime: result.servingTime ?? DEFAULT_SERVING_TIME,
           items: result.items ?? [],
         });
       }

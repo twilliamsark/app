@@ -15,6 +15,7 @@ describe('meal-template.model', () => {
       const template: MealTemplate = {
         id: 't1',
         name: 'Breakfast',
+        servingTime: 'breakfast',
         items: [{ foodId: 'f1', servings: 1 }],
         createdAt: 1000,
         updatedAt: 2000,

@@ -5,6 +5,15 @@
     <input matInput [ngModel]="name()" (ngModelChange)="name.set($event)" />
   </mat-form-field>
 
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Serving time</mat-label>
+    <mat-select [ngModel]="servingTime()" (ngModelChange)="servingTime.set($event)">
+      @for (st of servingTimes; track st) {
+        <mat-option [value]="st">{{ st }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
   <div class="add-row">
     <mat-form-field appearance="outline" class="food-select">
       <mat-label>Add food</mat-label>

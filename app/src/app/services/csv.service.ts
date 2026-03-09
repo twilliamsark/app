@@ -2,9 +2,10 @@ import { Injectable } from '@angular/core';
 import type { Food } from '../models/food.model';
 import type { MealTemplate } from '../models/meal-template.model';
 import type { MealInstance } from '../models/meal-instance.model';
+import { DEFAULT_SERVING_TIME, SERVING_TIMES } from '../models/serving-time.model';
 
 const FOOD_CSV_HEADER =
-  'id,name,calories,sodium,protein,total carbs,fiber carbs,net carbs,sugar carbs';
+  'id,name,serving time,calories,sodium,protein,total carbs,fiber carbs,net carbs,sugar carbs';
 
 @Injectable({ providedIn: 'root' })
 export class CsvService {
@@ -16,6 +17,9 @@ export class CsvService {
       header.findIndex((h) => ['food', 'target', 'name'].includes(h)) >= 0
         ? header.findIndex((h) => ['food', 'target', 'name'].includes(h))
         : 0;
+    const servingTimeIdx = header.findIndex(
+      (h) => h === 'serving time' || h === 'servingtime' || h === 'serving_time'
+    );
     const calIdx = header.indexOf('calories');
     const sodIdx = header.indexOf('sodium');
     const proIdx = header.indexOf('protein');
@@ -46,8 +50,13 @@ export class CsvService {
         const n = Number(v);
         return Number.isFinite(n) ? n : 0;
       };
+      const servingTimeRaw = (row[servingTimeIdx] ?? '').toString().trim().toLowerCase();
+      const servingTime = SERVING_TIMES.includes(servingTimeRaw as (typeof SERVING_TIMES)[number])
+        ? (servingTimeRaw as (typeof SERVING_TIMES)[number])
+        : DEFAULT_SERVING_TIME;
       rows.push({
         name,
+        servingTime,
         calories: num(calIdx),
         sodium: num(sodIdx),
         protein: num(proIdx),
@@ -108,6 +117,7 @@ export class CsvService {
     return [
       esc(food.id),
       esc(food.name),
+      esc(food.servingTime ?? DEFAULT_SERVING_TIME),
       food.calories,
       food.sodium,
       food.protein,
@@ -125,11 +135,12 @@ export class CsvService {
   }
 
   templatesToCsv(templates: MealTemplate[]): string {
-    const header = 'id,name,createdAt,updatedAt,itemsJson';
+    const header = 'id,name,servingTime,createdAt,updatedAt,itemsJson';
     const rows = templates.map((t) =>
       [
         t.id,
         `"${String(t.name).replace(/"/g, '""')}"`,
+        t.servingTime ?? DEFAULT_SERVING_TIME,
         t.createdAt,
         t.updatedAt,
         `"${JSON.stringify(t.items).replace(/"/g, '""')}"`,
@@ -139,13 +150,14 @@ export class CsvService {
   }
 
   instancesToCsv(instances: MealInstance[]): string {
-    const header = 'id,templateId,date,name,createdAt,updatedAt,itemsJson';
+    const header = 'id,templateId,date,name,servingTime,createdAt,updatedAt,itemsJson';
     const rows = instances.map((i) =>
       [
         i.id,
         i.templateId,
         i.date,
         `"${String(i.name).replace(/"/g, '""')}"`,
+        i.servingTime ?? DEFAULT_SERVING_TIME,
         i.createdAt,
         i.updatedAt,
         `"${JSON.stringify(i.items).replace(/"/g, '""')}"`,
@@ -159,6 +171,9 @@ export class CsvService {
     if (lines.length < 2) return [];
     const header = lines[0].map((c) => c.trim().toLowerCase());
     const nameIdx = header.indexOf('name');
+    const servingTimeIdx = header.findIndex(
+      (h) => h === 'servingtime' || h === 'serving time' || h === 'serving_time'
+    );
     const caIdx = header.indexOf('createdat');
     const uaIdx = header.indexOf('updatedat');
     const itemsIdx = header.indexOf('itemsjson');
@@ -167,6 +182,10 @@ export class CsvService {
     for (let i = 1; i < lines.length; i++) {
       const row = lines[i];
       const name = (row[nameIdx] ?? '').trim().replace(/^"|"$/g, '');
+      const servingTimeRaw = (row[servingTimeIdx] ?? '').toString().trim().toLowerCase();
+      const servingTime = SERVING_TIMES.includes(servingTimeRaw as (typeof SERVING_TIMES)[number])
+        ? (servingTimeRaw as (typeof SERVING_TIMES)[number])
+        : DEFAULT_SERVING_TIME;
       const itemsJson = (row[itemsIdx] ?? '').trim().replace(/^"|"$/g, '').replace(/""/g, '"');
       let items: { foodId: string; servings: number }[] = [];
       try {
@@ -176,7 +195,7 @@ export class CsvService {
       }
       const createdAt = caIdx >= 0 ? Number(row[caIdx]) || Date.now() : Date.now();
       const updatedAt = uaIdx >= 0 ? Number(row[uaIdx]) || Date.now() : Date.now();
-      result.push({ name, items, createdAt, updatedAt });
+      result.push({ name, servingTime, items, createdAt, updatedAt });
     }
     return result;
   }
@@ -188,6 +207,9 @@ export class CsvService {
     const tidIdx = header.indexOf('templateid');
     const dateIdx = header.indexOf('date');
     const nameIdx = header.indexOf('name');
+    const servingTimeIdx = header.findIndex(
+      (h) => h === 'servingtime' || h === 'serving time' || h === 'serving_time'
+    );
     const caIdx = header.indexOf('createdat');
     const uaIdx = header.indexOf('updatedat');
     const itemsIdx = header.indexOf('itemsjson');
@@ -198,6 +220,10 @@ export class CsvService {
       const templateId = (row[tidIdx] ?? '').trim();
       const date = (row[dateIdx] ?? '').trim();
       const name = (row[nameIdx] ?? '').trim().replace(/^"|"$/g, '');
+      const servingTimeRaw = (row[servingTimeIdx] ?? '').toString().trim().toLowerCase();
+      const servingTime = SERVING_TIMES.includes(servingTimeRaw as (typeof SERVING_TIMES)[number])
+        ? (servingTimeRaw as (typeof SERVING_TIMES)[number])
+        : DEFAULT_SERVING_TIME;
       const itemsJson = (row[itemsIdx] ?? '').trim().replace(/^"|"$/g, '').replace(/""/g, '"');
       let items: { foodId: string; servings: number }[] = [];
       try {
@@ -207,7 +233,7 @@ export class CsvService {
       }
       const createdAt = caIdx >= 0 ? Number(row[caIdx]) || Date.now() : Date.now();
       const updatedAt = uaIdx >= 0 ? Number(row[uaIdx]) || Date.now() : Date.now();
-      result.push({ templateId, date, name, items, createdAt, updatedAt });
+      result.push({ templateId, date, name, servingTime, items, createdAt, updatedAt });
     }
     return result;
   }

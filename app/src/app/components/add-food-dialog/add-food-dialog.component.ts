@@ -8,9 +8,11 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
 import type { Food } from '../../models/food.model';
+import { DEFAULT_SERVING_TIME, SERVING_TIMES } from '../../models/serving-time.model';
 
 export interface AddFoodDialogData {
   food?: Food;
@@ -23,6 +25,7 @@ export interface AddFoodDialogData {
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     MatButtonModule,
     MatDialogModule,
   ],
@@ -36,8 +39,11 @@ export class AddFoodDialogComponent implements OnInit {
 
   readonly isEdit = !!this.data?.food;
 
+  readonly servingTimes = SERVING_TIMES;
+
   readonly form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(1)]],
+    servingTime: [DEFAULT_SERVING_TIME as (typeof SERVING_TIMES)[number], [Validators.required]],
     calories: [0, [Validators.required, Validators.min(0)]],
     sodium: [0, [Validators.required, Validators.min(0)]],
     protein: [0, [Validators.required, Validators.min(0)]],
@@ -52,6 +58,7 @@ export class AddFoodDialogComponent implements OnInit {
     if (food) {
       this.form.patchValue({
         name: food.name,
+        servingTime: food.servingTime ?? DEFAULT_SERVING_TIME,
         calories: food.calories,
         sodium: food.sodium,
         protein: food.protein,
@@ -70,6 +77,7 @@ export class AddFoodDialogComponent implements OnInit {
     if (!name) return;
     const payload = {
       name,
+      servingTime: (v.servingTime as (typeof SERVING_TIMES)[number]) ?? DEFAULT_SERVING_TIME,
       calories: Number(v.calories) || 0,
       sodium: Number(v.sodium) || 0,
       protein: Number(v.protein) || 0,

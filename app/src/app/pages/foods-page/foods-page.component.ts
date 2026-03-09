@@ -18,7 +18,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatSelectModule } from '@angular/material/select';
 import { AddFoodDialogComponent, AddFoodDialogData } from '../../components/add-food-dialog/add-food-dialog.component';
+import { DEFAULT_SERVING_TIME, SERVING_TIMES } from '../../models/serving-time.model';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { StorageService } from '../../services/storage.service';
@@ -40,6 +42,7 @@ import type { Food } from '../../models/food.model';
     MatSlideToggleModule,
     MatCheckboxModule,
     MatDialogModule,
+    MatSelectModule,
   ],
   templateUrl: './foods-page.component.html',
   styleUrl: './foods-page.component.scss',
@@ -54,6 +57,7 @@ export class FoodsPageComponent implements AfterViewInit {
   private readonly dialog = inject(MatDialog);
 
   readonly searchQuery = signal('');
+  readonly servingTimeFilter = signal<string | null>(null);
   readonly maxCalories = signal<number | null>(null);
   readonly maxNetCarbs = signal<number | null>(null);
   readonly minProtein = signal<number | null>(null);
@@ -79,6 +83,10 @@ export class FoodsPageComponent implements AfterViewInit {
     if (minPro != null && Number.isFinite(minPro)) {
       list = list.filter((f) => f.protein >= minPro);
     }
+    const st = this.servingTimeFilter();
+    if (st != null && st !== '') {
+      list = list.filter((f) => (f.servingTime ?? DEFAULT_SERVING_TIME) === st);
+    }
     return list;
   });
 
@@ -92,8 +100,11 @@ export class FoodsPageComponent implements AfterViewInit {
     if (this.sort) this.dataSource.sort = this.sort;
   }
 
+  readonly servingTimes = SERVING_TIMES;
+
   clearFilters(): void {
     this.searchQuery.set('');
+    this.servingTimeFilter.set(null);
     this.maxCalories.set(null);
     this.maxNetCarbs.set(null);
     this.minProtein.set(null);
@@ -102,6 +113,7 @@ export class FoodsPageComponent implements AfterViewInit {
   readonly displayedColumns = [
     'select',
     'name',
+    'servingTime',
     'calories',
     'sodium',
     'protein',

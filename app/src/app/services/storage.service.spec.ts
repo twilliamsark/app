@@ -77,6 +77,7 @@ describe('StorageService', () => {
     const parsedFoods = [
       {
         name: 'eggs',
+        servingTime: 'breakfast' as const,
         calories: 70,
         sodium: 60,
         protein: 6,
@@ -107,6 +108,7 @@ describe('StorageService', () => {
       service.mergeFoods([
         {
           name: 'eggs',
+          servingTime: 'breakfast' as const,
           calories: 80,
           sodium: 60,
           protein: 6,
@@ -190,7 +192,7 @@ describe('StorageService', () => {
         sugarCarbs: 0,
       });
       const csv = service.exportFoodsCsv();
-      expect(csv).toContain('name,calories');
+      expect(csv).toContain('name,serving time,calories');
       expect(csv).toContain('Eggs');
     });
 

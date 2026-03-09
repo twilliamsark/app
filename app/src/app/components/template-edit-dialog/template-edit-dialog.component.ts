@@ -14,11 +14,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatSelectModule } from '@angular/material/select';
 import { StorageService } from '../../services/storage.service';
+import { DEFAULT_SERVING_TIME, SERVING_TIMES } from '../../models/serving-time.model';
 
 export interface TemplateEditDialogData {
   id?: string;
   name: string;
+  servingTime?: (typeof SERVING_TIMES)[number];
   items: { foodId: string; servings: number }[];
 }
 
@@ -29,6 +32,7 @@ export interface TemplateEditDialogData {
     FormsModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     MatButtonModule,
     MatIconModule,
     MatAutocompleteModule,
@@ -44,6 +48,10 @@ export class TemplateEditDialogComponent {
   private readonly storage = inject(StorageService);
 
   readonly name = signal(this.data.name);
+  readonly servingTime = signal<(typeof SERVING_TIMES)[number]>(
+    this.data.servingTime ?? DEFAULT_SERVING_TIME
+  );
+  readonly servingTimes = SERVING_TIMES;
   readonly items = signal<{ foodId: string; servings: number }[]>([
     ...this.data.items,
   ]);
@@ -113,6 +121,7 @@ export class TemplateEditDialogComponent {
     if (!n) return;
     this.dialogRef.close({
       name: n,
+      servingTime: this.servingTime(),
       items: this.items().filter((it) => it.servings > 0),
       createMeal: this.createMeal(),
     });

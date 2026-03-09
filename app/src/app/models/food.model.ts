@@ -1,6 +1,9 @@
+import type { ServingTime } from './serving-time.model';
+
 export interface Food {
   id: string;
   name: string;
+  servingTime: ServingTime;
   calories: number;
   sodium: number;
   protein: number;
