@@ -6,32 +6,56 @@ import {
   ChangeDetectionStrategy,
   OnInit,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
 import { Router } from '@angular/router';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { ModalController } from '@ionic/angular/standalone';
+import {
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonButtons,
+  IonButton,
+  IonIcon,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent,
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { cloudUploadOutline, downloadOutline, addOutline, createOutline, trashOutline } from 'ionicons/icons';
 import { StorageService } from '../../services/storage.service';
 import { TemplateBuilderService } from '../../services/template-builder.service';
 import { aggregateNutrients } from '../../models/food.model';
 import type { MealTemplateWithFoods } from '../../models/meal-template.model';
 import { TemplateEditDialogComponent } from '../../components/template-edit-dialog/template-edit-dialog.component';
-import {
-  InstanceCreateDialogComponent,
-  InstanceCreateDialogData,
-} from '../../components/instance-create-dialog/instance-create-dialog.component';
+import { InstanceCreateDialogComponent } from '../../components/instance-create-dialog/instance-create-dialog.component';
+
+addIcons({ cloudUploadOutline, downloadOutline, addOutline, createOutline, trashOutline });
 
 @Component({
   selector: 'app-templates-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatIconModule, MatCardModule, MatDialogModule],
+  standalone: true,
+  imports: [
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonButtons,
+    IonButton,
+    IonIcon,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardContent,
+  ],
   templateUrl: './templates-page.component.html',
   styleUrl: './templates-page.component.scss',
 })
 export class TemplatesPageComponent implements OnInit {
   private readonly storage = inject(StorageService);
   private readonly templateBuilder = inject(TemplateBuilderService);
-  private readonly dialog = inject(MatDialog);
+  private readonly modalCtrl = inject(ModalController);
   private readonly router = inject(Router);
 
   readonly templatesWithAggregates = computed<MealTemplateWithFoods[]>(() => {
@@ -54,7 +78,6 @@ export class TemplatesPageComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    // If navigated with ?new=1 and we have a selection, open create dialog
     const params = new URLSearchParams(window.location.search);
     if (params.get('new') === '1') {
       const selection = this.templateBuilder.getSelection();
@@ -66,60 +89,66 @@ export class TemplatesPageComponent implements OnInit {
     }
   }
 
-  openCreateDialog(initialItems?: { foodId: string; servings: number }[]): void {
-    const ref = this.dialog.open(TemplateEditDialogComponent, {
-      width: 'min(90vw, 560px)',
-      data: { name: '', items: initialItems ?? [] },
-    });
-    ref.afterClosed().subscribe((result) => {
-      if (result?.name == null) return;
-      const template = this.storage.addTemplate({
-        name: result.name,
-        items: result.items ?? [],
-      });
-      if (result.createMeal) {
-        this.router.navigate(['/meals']);
-        const today = new Date();
-        const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-        const instanceRef = this.dialog.open(InstanceCreateDialogComponent, {
-          width: 'min(90vw, 560px)',
-          data: { templateId: template.id, date: dateStr } satisfies InstanceCreateDialogData,
-        });
-        instanceRef.afterClosed().subscribe((instanceResult) => {
-          if (
-            instanceResult?.date != null &&
-            instanceResult?.templateId != null &&
-            instanceResult?.name != null
-          ) {
-            this.storage.addInstance({
-              templateId: instanceResult.templateId,
-              date: instanceResult.date,
-              name: instanceResult.name,
-              items: instanceResult.items ?? [],
-            });
-          }
-        });
-      }
-    });
-  }
-
-  openEditDialog(template: MealTemplateWithFoods): void {
-    const ref = this.dialog.open(TemplateEditDialogComponent, {
-      width: 'min(90vw, 560px)',
-      data: {
-        id: template.id,
-        name: template.name,
-        items: template.items.map((it) => ({ foodId: it.foodId, servings: it.servings })),
+  async openCreateDialog(initialItems?: { foodId: string; servings: number }[]): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      component: TemplateEditDialogComponent,
+      componentProps: {
+        nameProp: '',
+        itemsProp: initialItems ?? [],
       },
     });
-    ref.afterClosed().subscribe((result) => {
-      if (result != null && result.name != null && template.id) {
-        this.storage.updateTemplate(template.id, {
-          name: result.name,
-          items: result.items ?? template.items,
+    await modal.present();
+    const { data: result } = await modal.onDidDismiss();
+    if (result?.name == null) return;
+    const template = this.storage.addTemplate({
+      name: result.name,
+      items: result.items ?? [],
+    });
+    if (result.createMeal) {
+      this.router.navigate(['/meals']);
+      const today = new Date();
+      const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const instanceModal = await this.modalCtrl.create({
+        component: InstanceCreateDialogComponent,
+        componentProps: {
+          templateIdProp: template.id,
+          dateProp: dateStr,
+        },
+      });
+      await instanceModal.present();
+      const { data: instanceResult } = await instanceModal.onDidDismiss();
+      if (
+        instanceResult?.date != null &&
+        instanceResult?.templateId != null &&
+        instanceResult?.name != null
+      ) {
+        this.storage.addInstance({
+          templateId: instanceResult.templateId,
+          date: instanceResult.date,
+          name: instanceResult.name,
+          items: instanceResult.items ?? [],
         });
       }
+    }
+  }
+
+  async openEditDialog(template: MealTemplateWithFoods): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      component: TemplateEditDialogComponent,
+      componentProps: {
+        idProp: template.id,
+        nameProp: template.name,
+        itemsProp: template.items.map((it) => ({ foodId: it.foodId, servings: it.servings })),
+      },
     });
+    await modal.present();
+    const { data: result } = await modal.onDidDismiss();
+    if (result != null && result.name != null && template.id) {
+      this.storage.updateTemplate(template.id, {
+        name: result.name,
+        items: result.items ?? template.items,
+      });
+    }
   }
 
   deleteTemplate(id: string): void {

@@ -5,17 +5,30 @@ import {
   computed,
   ChangeDetectionStrategy,
   OnInit,
+  input,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatDialogModule } from '@angular/material/dialog';
+import { IonModalToken } from '@ionic/angular/standalone';
+import {
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonFooter,
+  IonButtons,
+  IonButton,
+  IonItem,
+  IonLabel,
+  IonInput,
+  IonSearchbar,
+  IonList,
+  IonIcon,
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { closeOutline } from 'ionicons/icons';
 import { StorageService } from '../../services/storage.service';
+
+addIcons({ closeOutline });
 
 export interface InstanceCreateDialogData {
   templateId?: string;
@@ -25,47 +38,57 @@ export interface InstanceCreateDialogData {
 @Component({
   selector: 'app-instance-create-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
   imports: [
     FormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatAutocompleteModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatDialogModule,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonFooter,
+    IonButtons,
+    IonButton,
+    IonItem,
+    IonLabel,
+    IonInput,
+    IonSearchbar,
+    IonList,
+    IonIcon,
   ],
   templateUrl: './instance-create-dialog.component.html',
   styleUrl: './instance-create-dialog.component.scss',
 })
 export class InstanceCreateDialogComponent implements OnInit {
-  private readonly dialogRef = inject(MatDialogRef<InstanceCreateDialogComponent>);
+  private readonly modal = inject(IonModalToken, { optional: true });
   private readonly storage = inject(StorageService);
-  private readonly dialogData = inject<InstanceCreateDialogData | undefined>(MAT_DIALOG_DATA, {
-    optional: true,
-  });
+
+  templateIdProp = input<string | undefined>();
+  dateProp = input<string | undefined>();
 
   readonly templateId = signal<string | null>(null);
-  /** Input value: string while typing, or selected template object. */
   readonly templateInputValue = signal<string | { id: string; name: string } | null>(null);
-  /** Date for the picker (bound to mat-datepicker). */
-  readonly dateValue = signal<Date>(new Date());
+  readonly dateValue = signal<string>(this.todayStr());
   readonly name = signal('');
   readonly items = signal<{ foodId: string; servings: number }[]>([]);
+  readonly showTemplateList = signal(false);
+
+  getTemplateSearchDisplay(): string {
+    const v = this.templateInputValue();
+    if (v == null) return '';
+    return typeof v === 'object' ? v.name : v;
+  }
 
   ngOnInit(): void {
-    const d = this.dialogData;
-    if (d?.templateId) {
-      const t = this.storage.templates().find((x) => x.id === d.templateId);
+    const tid = this.templateIdProp();
+    const d = this.dateProp();
+    if (tid) {
+      const t = this.storage.templates().find((x) => x.id === tid);
       if (t) {
-        const option = { id: t.id, name: t.name };
-        this.templateInputValue.set(option);
+        this.templateInputValue.set({ id: t.id, name: t.name });
         this.onTemplateChange(t.id);
       }
     }
-    if (d?.date) {
-      this.dateValue.set(this.parseDateStr(d.date));
-    }
+    if (d) this.dateValue.set(d);
   }
 
   readonly templateOptions = computed(() =>
@@ -93,38 +116,30 @@ export class InstanceCreateDialogComponent implements OnInit {
 
   readonly canSave = computed(() => {
     const tid = this.templateId();
+    const d = this.dateValue();
     const n = this.name().trim();
-    return tid != null && this.dateValue() != null && n.length > 0 && this.items().length > 0;
+    return tid != null && (d?.length ?? 0) > 0 && n.length > 0 && this.items().length > 0;
   });
 
-  private dateToStr(date: Date): string {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+  private todayStr(): string {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
     return `${y}-${m}-${day}`;
   }
 
-  private parseDateStr(str: string): Date {
-    return new Date(str + 'T12:00:00');
+  onTemplateSearchInput(ev: CustomEvent): void {
+    const value = (ev.target as HTMLIonSearchbarElement).value ?? '';
+    this.templateInputValue.set(value);
+    this.showTemplateList.set(true);
+    if (this.templateId()) this.onTemplateChange(null);
   }
-
-  onTemplateInputChange(value: string | { id: string; name: string } | null): void {
-    this.templateInputValue.set(value ?? '');
-    if (typeof value === 'object' && value != null) {
-      this.onTemplateChange(value.id);
-    } else {
-      if (this.templateId()) this.onTemplateChange(null);
-    }
-  }
-
-  displayTemplateName = (value: { id: string; name: string } | string | null): string => {
-    if (value == null) return '';
-    return typeof value === 'object' ? value.name : String(value);
-  };
 
   onTemplateOptionSelected(option: { id: string; name: string }): void {
-    this.templateInputValue.set(option);
+    this.templateInputValue.set(option.name);
     this.onTemplateChange(option.id);
+    this.showTemplateList.set(false);
   }
 
   onTemplateChange(templateId: string | null): void {
@@ -150,18 +165,18 @@ export class InstanceCreateDialogComponent implements OnInit {
 
   save(): void {
     const tid = this.templateId();
-    const dateObj = this.dateValue();
+    const d = this.dateValue();
     const n = this.name().trim();
-    if (!tid || !dateObj || !n) return;
-    this.dialogRef.close({
+    if (!tid || !d || !n) return;
+    this.modal?.dismiss({
       templateId: tid,
-      date: this.dateToStr(dateObj),
+      date: d,
       name: n,
       items: this.items().filter((it) => it.servings > 0),
     });
   }
 
   cancel(): void {
-    this.dialogRef.close();
+    this.modal?.dismiss();
   }
 }

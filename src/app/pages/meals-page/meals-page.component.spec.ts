@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MatDialog } from '@angular/material/dialog';
-import { of } from 'rxjs';
+import { ModalController } from '@ionic/angular/standalone';
 import { MealsPageComponent } from './meals-page.component';
 import { StorageService } from '../../services/storage.service';
 import { CsvService } from '../../services/csv.service';
@@ -10,15 +9,16 @@ describe('MealsPageComponent', () => {
   let fixture: ComponentFixture<MealsPageComponent>;
   let component: MealsPageComponent;
   let storage: StorageService;
-  let dialogOpenSpy: ReturnType<typeof vi.fn>;
+  let modalCreateSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     localStorage.removeItem('nutrition_foods');
     localStorage.removeItem('nutrition_templates');
     localStorage.removeItem('nutrition_instances');
 
-    dialogOpenSpy = vi.fn().mockReturnValue({
-      afterClosed: () => of(undefined),
+    modalCreateSpy = vi.fn().mockResolvedValue({
+      present: vi.fn().mockResolvedValue(undefined),
+      onDidDismiss: () => Promise.resolve({ data: undefined }),
     });
 
     TestBed.configureTestingModule({
@@ -27,13 +27,10 @@ describe('MealsPageComponent', () => {
         StorageService,
         CsvService,
         {
-          provide: MatDialog,
-          useValue: { open: dialogOpenSpy },
+          provide: ModalController,
+          useValue: { create: modalCreateSpy },
         },
       ],
-    });
-    TestBed.overrideProvider(MatDialog, {
-      useValue: { open: dialogOpenSpy },
     });
 
     fixture = TestBed.createComponent(MealsPageComponent);
@@ -47,7 +44,7 @@ describe('MealsPageComponent', () => {
   });
 
   it('renders the Meals heading', () => {
-    const heading = fixture.nativeElement.querySelector('h1');
+    const heading = fixture.nativeElement.querySelector('ion-title');
     expect(heading?.textContent?.trim()).toBe('Meals');
   });
 
@@ -87,55 +84,36 @@ describe('MealsPageComponent', () => {
     expect(instances[0].aggregates.calories).toBe(140);
   });
 
-  it('openCreateDialog opens InstanceCreateDialogComponent', () => {
-    component.openCreateDialog();
-    expect(dialogOpenSpy).toHaveBeenCalled();
-    const componentClass = dialogOpenSpy.mock.calls[0][0];
-    expect(componentClass?.name).toContain('InstanceCreateDialogComponent');
+  it('openCreateDialog opens InstanceCreateDialogComponent', async () => {
+    await component.openCreateDialog();
+    expect(modalCreateSpy).toHaveBeenCalled();
+    const config = modalCreateSpy.mock.calls[0][0];
+    expect(config.component?.name).toContain('InstanceCreateDialogComponent');
   });
 
-  it('adds instance when dialog returns result', () => {
-    const addDialogSpy = vi.fn().mockReturnValue({
-      afterClosed: () =>
-        of({
-          templateId: 't1',
-          date: '2025-03-05',
-          name: 'Lunch',
-          items: [],
-        }),
-    });
-    TestBed.resetTestingModule();
-    TestBed.configureTestingModule({
-      imports: [MealsPageComponent],
-      providers: [
-        StorageService,
-        CsvService,
-        { provide: MatDialog, useValue: { open: addDialogSpy } },
-      ],
-    });
-    const addStorage = TestBed.inject(StorageService);
-    const template = addStorage.addTemplate({
+  it('adds instance when dialog returns result', async () => {
+    const template = storage.addTemplate({
       name: 'Lunch',
       items: [],
     });
-    addDialogSpy.mockReturnValue({
-      afterClosed: () =>
-        of({
-          templateId: template.id,
-          date: '2025-03-05',
-          name: 'Lunch',
-          items: [],
+    modalCreateSpy.mockResolvedValue({
+      present: vi.fn().mockResolvedValue(undefined),
+      onDidDismiss: () =>
+        Promise.resolve({
+          data: {
+            templateId: template.id,
+            date: '2025-03-05',
+            name: 'Lunch',
+            items: [],
+          },
         }),
     });
-    const addFixture = TestBed.createComponent(MealsPageComponent);
-    const addComponent = addFixture.componentInstance;
-    addFixture.detectChanges();
 
-    addComponent.openCreateDialog();
-    addFixture.detectChanges();
+    await component.openCreateDialog();
+    fixture.detectChanges();
 
-    expect(addStorage.instances()).toHaveLength(1);
-    expect(addStorage.instances()[0].date).toBe('2025-03-05');
+    expect(storage.instances()).toHaveLength(1);
+    expect(storage.instances()[0].date).toBe('2025-03-05');
   });
 
   it('deleteInstance removes instance when confirmed', () => {

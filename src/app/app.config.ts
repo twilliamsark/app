@@ -3,8 +3,9 @@ import {
   provideZonelessChangeDetection,
   provideAppInitializer,
 } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, RouteReuseStrategy } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
+import { provideIonicAngular, IonicRouteStrategy } from '@ionic/angular/standalone';
 import { appRoutes } from './app.routes';
 import { loadInitialData } from './app.initializer';
 
@@ -14,5 +15,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(appRoutes),
     provideHttpClient(),
     provideAppInitializer(loadInitialData),
+    { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
+    provideIonicAngular({ mode: 'ios' }),
   ],
 };

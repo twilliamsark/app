@@ -6,35 +6,52 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatDialogModule } from '@angular/material/dialog';
-import { AddFoodDialogComponent } from '../../components/add-food-dialog/add-food-dialog.component';
 import { Router } from '@angular/router';
-import { MatDialog } from '@angular/material/dialog';
+import { ModalController } from '@ionic/angular/standalone';
+import {
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonButtons,
+  IonButton,
+  IonIcon,
+  IonSearchbar,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonCheckbox,
+  IonInput,
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { addOutline, cloudUploadOutline, downloadOutline, layersOutline } from 'ionicons/icons';
 import { StorageService } from '../../services/storage.service';
 import { CsvService } from '../../services/csv.service';
 import { TemplateBuilderService } from '../../services/template-builder.service';
 import type { Food } from '../../models/food.model';
+import { AddFoodDialogComponent } from '../../components/add-food-dialog/add-food-dialog.component';
+
+addIcons({ addOutline, cloudUploadOutline, downloadOutline, layersOutline });
 
 @Component({
   selector: 'app-foods-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
   imports: [
     FormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatTableModule,
-    MatButtonModule,
-    MatIconModule,
-    MatSlideToggleModule,
-    MatCheckboxModule,
-    MatDialogModule,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonButtons,
+    IonButton,
+    IonIcon,
+    IonSearchbar,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonCheckbox,
+    IonInput,
   ],
   templateUrl: './foods-page.component.html',
   styleUrl: './foods-page.component.scss',
@@ -44,7 +61,7 @@ export class FoodsPageComponent {
   private readonly csv = inject(CsvService);
   private readonly templateBuilder = inject(TemplateBuilderService);
   private readonly router = inject(Router);
-  private readonly dialog = inject(MatDialog);
+  private readonly modalCtrl = inject(ModalController);
 
   readonly searchQuery = signal('');
   readonly maxCalories = signal<number | null>(null);
@@ -72,18 +89,6 @@ export class FoodsPageComponent {
     }
     return list;
   });
-
-  readonly displayedColumns = [
-    'select',
-    'name',
-    'calories',
-    'sodium',
-    'protein',
-    'totalCarbs',
-    'fiberCarbs',
-    'netCarbs',
-    'sugarCarbs',
-  ];
 
   toggleSelect(id: string): void {
     this.selectedIds.update((set) => {
@@ -153,12 +158,12 @@ export class FoodsPageComponent {
     this.router.navigate(['/templates'], { queryParams: { new: '1' } });
   }
 
-  openAddFoodDialog(): void {
-    const ref = this.dialog.open(AddFoodDialogComponent, {
-      width: 'min(90vw, 520px)',
+  async openAddFoodDialog(): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      component: AddFoodDialogComponent,
     });
-    ref.afterClosed().subscribe((result) => {
-      if (result) this.storage.addFood(result);
-    });
+    await modal.present();
+    const { data } = await modal.onDidDismiss();
+    if (data) this.storage.addFood(data);
   }
 }

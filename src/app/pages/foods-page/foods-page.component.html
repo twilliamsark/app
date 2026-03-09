@@ -1,107 +1,101 @@
-<div class="page">
-  <div class="toolbar">
-    <h1>Foods</h1>
-    <div class="actions">
-      <button mat-flat-button color="primary" (click)="openAddFoodDialog()">
-        <mat-icon>add</mat-icon>
-        Add food
-      </button>
-      <button mat-flat-button (click)="triggerImport()">
-        <mat-icon>upload_file</mat-icon>
-        Import CSV
-      </button>
-      <button mat-flat-button (click)="exportCsv()">
-        <mat-icon>download</mat-icon>
-        Export CSV
-      </button>
+<div class="ion-page">
+  <ion-header>
+    <ion-toolbar>
+      <ion-title>Foods</ion-title>
+      <ion-buttons slot="end">
+        <ion-button (click)="openAddFoodDialog()">
+          <ion-icon name="add-outline" />
+          Add food
+        </ion-button>
+        <ion-button (click)="triggerImport()">
+          <ion-icon name="cloud-upload-outline" />
+          Import
+        </ion-button>
+        <ion-button (click)="exportCsv()">
+          <ion-icon name="download-outline" />
+          Export
+        </ion-button>
+      </ion-buttons>
+    </ion-toolbar>
+  </ion-header>
+  <ion-content class="ion-padding">
+    <p class="hint">Import adds or updates foods; it does not delete existing ones.</p>
+
+    <ion-searchbar
+      [value]="searchQuery()"
+      (ionInput)="searchQuery.set(($any($event.target).value ?? ''))"
+      placeholder="Search by name"
+      debounce="150"
+    />
+    <div class="filters">
+      <ion-item>
+        <ion-label position="stacked">Max calories</ion-label>
+        <ion-input
+          type="number"
+          min="0"
+          step="10"
+          [ngModel]="maxCalories()"
+          (ngModelChange)="maxCalories.set($event === '' ? null : +$event)"
+        />
+      </ion-item>
+      <ion-item>
+        <ion-label position="stacked">Max net carbs</ion-label>
+        <ion-input
+          type="number"
+          min="0"
+          step="1"
+          [ngModel]="maxNetCarbs()"
+          (ngModelChange)="maxNetCarbs.set($event === '' ? null : +$event)"
+        />
+      </ion-item>
+      <ion-item>
+        <ion-label position="stacked">Min protein</ion-label>
+        <ion-input
+          type="number"
+          min="0"
+          step="1"
+          [ngModel]="minProtein()"
+          (ngModelChange)="minProtein.set($event === '' ? null : +$event)"
+        />
+      </ion-item>
     </div>
-  </div>
 
-  <p class="hint">Import adds or updates foods; it does not delete existing ones.</p>
-
-  <div class="filters">
-    <mat-form-field appearance="outline" class="search">
-      <mat-label>Search by name</mat-label>
-      <input matInput [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" />
-      <mat-icon matPrefix>search</mat-icon>
-    </mat-form-field>
-    <mat-form-field appearance="outline" class="num">
-      <mat-label>Max calories</mat-label>
-      <input matInput type="number" min="0" step="10" [ngModel]="maxCalories()" (ngModelChange)="maxCalories.set($event === '' ? null : +$event)" />
-    </mat-form-field>
-    <mat-form-field appearance="outline" class="num">
-      <mat-label>Max net carbs</mat-label>
-      <input matInput type="number" min="0" step="1" [ngModel]="maxNetCarbs()" (ngModelChange)="maxNetCarbs.set($event === '' ? null : +$event)" />
-    </mat-form-field>
-    <mat-form-field appearance="outline" class="num">
-      <mat-label>Min protein</mat-label>
-      <input matInput type="number" min="0" step="1" [ngModel]="minProtein()" (ngModelChange)="minProtein.set($event === '' ? null : +$event)" />
-    </mat-form-field>
-  </div>
-
-  <div class="table-wrap">
-    <table mat-table [dataSource]="filteredFoods()" class="food-table">
-      <ng-container matColumnDef="select">
-        <th mat-header-cell *matHeaderCellDef>
-          <mat-checkbox
-            [checked]="getSelectionChecked()"
-            [indeterminate]="getSelectionIndeterminate()"
-            (change)="toggleSelectAll($event.checked)"
-            aria-label="Select all"
-          ></mat-checkbox>
-        </th>
-        <td mat-cell *matCellDef="let row">
-          <mat-checkbox
+    @if (filteredFoods().length > 0) {
+      <ion-item class="select-all-row">
+        <ion-checkbox
+          [checked]="getSelectionChecked()"
+          [indeterminate]="getSelectionIndeterminate()"
+          (ionChange)="toggleSelectAll(($any($event).detail.checked))"
+          aria-label="Select all"
+        />
+        <ion-label>Select all</ion-label>
+      </ion-item>
+    }
+    <ion-list>
+      @for (row of filteredFoods(); track row.id) {
+        <ion-item button (click)="toggleSelect(row.id)">
+          <ion-checkbox
+            slot="start"
             [checked]="selectedIds().has(row.id)"
-            (change)="toggleSelect(row.id)"
+            tabindex="-1"
             [attr.aria-label]="'Select ' + row.name"
-          ></mat-checkbox>
-        </td>
-      </ng-container>
-      <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef>Name</th>
-        <td mat-cell *matCellDef="let row">{{ row.name }}</td>
-      </ng-container>
-      <ng-container matColumnDef="calories">
-        <th mat-header-cell *matHeaderCellDef>Cal</th>
-        <td mat-cell *matCellDef="let row">{{ row.calories }}</td>
-      </ng-container>
-      <ng-container matColumnDef="sodium">
-        <th mat-header-cell *matHeaderCellDef>Sodium</th>
-        <td mat-cell *matCellDef="let row">{{ row.sodium }}</td>
-      </ng-container>
-      <ng-container matColumnDef="protein">
-        <th mat-header-cell *matHeaderCellDef>Protein</th>
-        <td mat-cell *matCellDef="let row">{{ row.protein }}</td>
-      </ng-container>
-      <ng-container matColumnDef="totalCarbs">
-        <th mat-header-cell *matHeaderCellDef>Total carbs</th>
-        <td mat-cell *matCellDef="let row">{{ row.totalCarbs }}</td>
-      </ng-container>
-      <ng-container matColumnDef="fiberCarbs">
-        <th mat-header-cell *matHeaderCellDef>Fiber</th>
-        <td mat-cell *matCellDef="let row">{{ row.fiberCarbs }}</td>
-      </ng-container>
-      <ng-container matColumnDef="netCarbs">
-        <th mat-header-cell *matHeaderCellDef>Net carbs</th>
-        <td mat-cell *matCellDef="let row">{{ row.netCarbs }}</td>
-      </ng-container>
-      <ng-container matColumnDef="sugarCarbs">
-        <th mat-header-cell *matHeaderCellDef>Sugar</th>
-        <td mat-cell *matCellDef="let row">{{ row.sugarCarbs }}</td>
-      </ng-container>
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-    </table>
-  </div>
+          />
+          <ion-label>
+            <h2>{{ row.name }}</h2>
+            <p>Cal {{ row.calories }} · P {{ row.protein }} · Net {{ row.netCarbs }}</p>
+          </ion-label>
+        </ion-item>
+      }
+    </ion-list>
 
-  @if (getSelectedFoods().length > 0) {
-    <div class="selected-actions">
-      <p class="selected-hint">{{ getSelectedFoods().length }} selected.</p>
-      <button mat-flat-button color="accent" (click)="saveSelectionAsTemplate()">
-        <mat-icon>add_circle</mat-icon>
-        Save as meal template
-      </button>
-    </div>
-  }
+    @if (getSelectedFoods().length > 0) {
+      <div class="selected-actions">
+        <p class="selected-hint">{{ getSelectedFoods().length }} selected.</p>
+        <ion-button (click)="saveSelectionAsTemplate()">
+          <ion-icon name="layers-outline" />
+          Save as meal template
+        </ion-button>
+      </div>
+    }
+  </ion-content>
 </div>

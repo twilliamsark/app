@@ -4,17 +4,32 @@ import {
   signal,
   computed,
   ChangeDetectionStrategy,
+  input,
+  OnInit,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatDialogModule } from '@angular/material/dialog';
+import { IonModalToken } from '@ionic/angular/standalone';
+import {
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonFooter,
+  IonButtons,
+  IonButton,
+  IonItem,
+  IonLabel,
+  IonInput,
+  IonSearchbar,
+  IonList,
+  IonCheckbox,
+  IonIcon,
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { closeOutline } from 'ionicons/icons';
 import { StorageService } from '../../services/storage.service';
+
+addIcons({ closeOutline });
 
 export interface TemplateEditDialogData {
   id?: string;
@@ -25,41 +40,54 @@ export interface TemplateEditDialogData {
 @Component({
   selector: 'app-template-edit-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
   imports: [
     FormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatAutocompleteModule,
-    MatCheckboxModule,
-    MatDialogModule,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonFooter,
+    IonButtons,
+    IonButton,
+    IonItem,
+    IonLabel,
+    IonInput,
+    IonSearchbar,
+    IonList,
+    IonCheckbox,
+    IonIcon,
   ],
   templateUrl: './template-edit-dialog.component.html',
   styleUrl: './template-edit-dialog.component.scss',
 })
-export class TemplateEditDialogComponent {
-  private readonly dialogRef = inject(MatDialogRef<TemplateEditDialogComponent>);
-  readonly data = inject<TemplateEditDialogData>(MAT_DIALOG_DATA);
+export class TemplateEditDialogComponent implements OnInit {
+  private readonly modal = inject(IonModalToken, { optional: true });
   private readonly storage = inject(StorageService);
 
-  readonly name = signal(this.data.name);
-  readonly items = signal<{ foodId: string; servings: number }[]>([
-    ...this.data.items,
-  ]);
+  idProp = input<string | undefined>();
+  nameProp = input<string>('');
+  itemsProp = input<{ foodId: string; servings: number }[]>([]);
+
+  readonly name = signal('');
+  readonly items = signal<{ foodId: string; servings: number }[]>([]);
   readonly createMeal = signal(false);
+  readonly showFoodList = signal(false);
+
+  ngOnInit(): void {
+    this.name.set(this.nameProp());
+    this.items.set([...this.itemsProp()]);
+  }
 
   readonly foodOptions = computed(() => this.storage.foods());
-  /** Add food input: string while typing, or selected food { id, name }. */
-  readonly addFoodInputValue = signal<string | { id: string; name: string } | null>(null);
+  readonly addFoodInputValue = signal<string>('');
   readonly foodById = this.storage.foodById;
 
   readonly filteredFoodOptions = computed(() => {
     const foods = this.foodOptions();
     const existingIds = new Set(this.items().map((it) => it.foodId));
     const available = foods.filter((f) => !existingIds.has(f.id));
-    const v = this.addFoodInputValue();
-    const q = (typeof v === 'string' ? v : v?.name ?? '').toLowerCase().trim();
+    const q = this.addFoodInputValue().toLowerCase().trim();
     if (!q) return available.map((f) => ({ id: f.id, name: f.name }));
     return available
       .filter((f) => f.name.toLowerCase().includes(q))
@@ -75,26 +103,22 @@ export class TemplateEditDialogComponent {
     }));
   });
 
-  displayFoodName = (value: { id: string; name: string } | string | null): string => {
-    if (value == null) return '';
-    return typeof value === 'object' ? value.name : String(value);
-  };
-
-  onAddFoodInputChange(value: string | { id: string; name: string } | null): void {
-    this.addFoodInputValue.set(value ?? '');
+  onAddFoodSearch(ev: CustomEvent): void {
+    this.addFoodInputValue.set((ev.target as HTMLIonSearchbarElement).value ?? '');
+    this.showFoodList.set(true);
   }
 
   onAddFoodOptionSelected(option: { id: string; name: string }): void {
-    this.addFoodInputValue.set(option);
+    this.addItem(option.id);
+    this.addFoodInputValue.set('');
+    this.showFoodList.set(false);
   }
 
-  addItem(): void {
-    const v = this.addFoodInputValue();
-    const id = typeof v === 'object' && v != null ? v.id : null;
+  addItem(foodId?: string): void {
+    const id = foodId ?? (this.filteredFoodOptions()[0]?.id);
     if (!id) return;
     if (this.items().some((it) => it.foodId === id)) return;
     this.items.update((list) => [...list, { foodId: id, servings: 1 }]);
-    this.addFoodInputValue.set(null);
   }
 
   setServings(foodId: string, servings: number): void {
@@ -111,7 +135,7 @@ export class TemplateEditDialogComponent {
   save(): void {
     const n = this.name().trim();
     if (!n) return;
-    this.dialogRef.close({
+    this.modal?.dismiss({
       name: n,
       items: this.items().filter((it) => it.servings > 0),
       createMeal: this.createMeal(),
@@ -119,6 +143,6 @@ export class TemplateEditDialogComponent {
   }
 
   cancel(): void {
-    this.dialogRef.close();
+    this.modal?.dismiss();
   }
 }

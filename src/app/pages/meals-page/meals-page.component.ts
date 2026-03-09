@@ -5,15 +5,29 @@ import {
   computed,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
-import { MatDialog } from '@angular/material/dialog';
+import { ModalController } from '@ionic/angular/standalone';
+import {
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonButtons,
+  IonButton,
+  IonIcon,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardSubtitle,
+  IonCardContent,
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { cloudUploadOutline, downloadOutline, addOutline, trashOutline } from 'ionicons/icons';
 import { StorageService } from '../../services/storage.service';
 import { aggregateNutrients, type FoodNutrients } from '../../models/food.model';
 import type { MealInstance } from '../../models/meal-instance.model';
 import { InstanceCreateDialogComponent } from '../../components/instance-create-dialog/instance-create-dialog.component';
+
+addIcons({ cloudUploadOutline, downloadOutline, addOutline, trashOutline });
 
 interface InstanceWithAggregates extends MealInstance {
   aggregates: FoodNutrients;
@@ -29,13 +43,27 @@ export interface DayRow {
 @Component({
   selector: 'app-meals-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, MatButtonModule, MatIconModule, MatCardModule],
+  standalone: true,
+  imports: [
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonButtons,
+    IonButton,
+    IonIcon,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardSubtitle,
+    IonCardContent,
+  ],
   templateUrl: './meals-page.component.html',
   styleUrl: './meals-page.component.scss',
 })
 export class MealsPageComponent {
   private readonly storage = inject(StorageService);
-  private readonly dialog = inject(MatDialog);
+  private readonly modalCtrl = inject(ModalController);
 
   readonly instancesWithAggregates = computed<InstanceWithAggregates[]>(() => {
     const instances = this.storage.instances();
@@ -107,21 +135,21 @@ export class MealsPageComponent {
     return rows;
   });
 
-  openCreateDialog(): void {
-    const ref = this.dialog.open(InstanceCreateDialogComponent, {
-      width: 'min(90vw, 560px)',
-      data: {},
+  async openCreateDialog(): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      component: InstanceCreateDialogComponent,
+      componentProps: {},
     });
-    ref.afterClosed().subscribe((result) => {
-      if (result?.date != null && result?.templateId != null && result?.name != null) {
-        this.storage.addInstance({
-          templateId: result.templateId,
-          date: result.date,
-          name: result.name,
-          items: result.items ?? [],
-        });
-      }
-    });
+    await modal.present();
+    const { data } = await modal.onDidDismiss();
+    if (data?.date != null && data?.templateId != null && data?.name != null) {
+      this.storage.addInstance({
+        templateId: data.templateId,
+        date: data.date,
+        name: data.name,
+        items: data.items ?? [],
+      });
+    }
   }
 
   deleteInstance(id: string): void {

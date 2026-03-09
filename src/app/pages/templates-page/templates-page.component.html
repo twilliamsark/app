@@ -1,46 +1,53 @@
-<div class="page">
-  <div class="toolbar">
-    <h1>Meal templates</h1>
-    <div class="actions">
-      <button mat-flat-button (click)="triggerImport()">
-        <mat-icon>upload_file</mat-icon>
-        Import CSV
-      </button>
-      <button mat-flat-button (click)="exportCsv()">
-        <mat-icon>download</mat-icon>
-        Export CSV
-      </button>
-      <button mat-flat-button color="primary" (click)="openCreateDialog()">
-        <mat-icon>add</mat-icon>
-        New template
-      </button>
+<div class="ion-page">
+  <ion-header>
+    <ion-toolbar>
+      <ion-title>Meal templates</ion-title>
+      <ion-buttons slot="end">
+        <ion-button (click)="triggerImport()">
+          <ion-icon name="cloud-upload-outline" />
+          Import
+        </ion-button>
+        <ion-button (click)="exportCsv()">
+          <ion-icon name="download-outline" />
+          Export
+        </ion-button>
+        <ion-button (click)="openCreateDialog()">
+          <ion-icon name="add-outline" />
+          New template
+        </ion-button>
+      </ion-buttons>
+    </ion-toolbar>
+  </ion-header>
+  <ion-content class="ion-padding">
+    <p class="hint">Templates are groups of foods with default servings. Use them to create meal instances for a date.</p>
+
+    <div class="cards">
+      @for (t of templatesWithAggregates(); track t.id) {
+        <ion-card class="template-card">
+          <ion-card-header>
+            <ion-card-title>{{ t.name }}</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <div class="aggregates" aria-label="Totals for this template">
+              <span>Cal {{ t.aggregates.calories }}</span>
+              <span>Na {{ t.aggregates.sodium }}</span>
+              <span>P {{ t.aggregates.protein }}</span>
+              <span>Net carbs {{ t.aggregates.netCarbs }}</span>
+            </div>
+            <p class="item-count">{{ t.items.length }} item(s)</p>
+          </ion-card-content>
+          <ion-button fill="clear" (click)="openEditDialog(t)">
+            <ion-icon name="create-outline" />
+            Edit
+          </ion-button>
+          <ion-button fill="clear" color="danger" (click)="deleteTemplate(t.id)">
+            <ion-icon name="trash-outline" />
+            Delete
+          </ion-button>
+        </ion-card>
+      } @empty {
+        <p class="empty">No templates yet. Create one from the Foods page by selecting items and "Save as meal template", or add a new template here.</p>
+      }
     </div>
-  </div>
-
-  <p class="hint">Templates are groups of foods with default servings. Use them to create meal instances for a date.</p>
-
-  <div class="cards">
-    @for (t of templatesWithAggregates(); track t.id) {
-      <mat-card class="template-card">
-        <mat-card-header>
-          <mat-card-title>{{ t.name }}</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="aggregates" aria-label="Totals for this template">
-            <span>Cal {{ t.aggregates.calories }}</span>
-            <span>Na {{ t.aggregates.sodium }}</span>
-            <span>P {{ t.aggregates.protein }}</span>
-            <span>Net carbs {{ t.aggregates.netCarbs }}</span>
-          </div>
-          <p class="item-count">{{ t.items.length }} item(s)</p>
-        </mat-card-content>
-        <mat-card-actions>
-          <button mat-button (click)="openEditDialog(t)">Edit</button>
-          <button mat-button color="warn" (click)="deleteTemplate(t.id)">Delete</button>
-        </mat-card-actions>
-      </mat-card>
-    } @empty {
-      <p class="empty">No templates yet. Create one from the Foods page by selecting items and “Save as meal template”, or add a new template here.</p>
-    }
-  </div>
+  </ion-content>
 </div>

@@ -4,27 +4,48 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule } from '@angular/material/dialog';
+import { IonModalToken } from '@ionic/angular/standalone';
+import {
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonFooter,
+  IonButtons,
+  IonButton,
+  IonItem,
+  IonLabel,
+  IonInput,
+  IonIcon,
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { closeOutline } from 'ionicons/icons';
+
+addIcons({ closeOutline });
 
 @Component({
   selector: 'app-add-food-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
   imports: [
     ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatDialogModule,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonFooter,
+    IonButtons,
+    IonButton,
+    IonItem,
+    IonLabel,
+    IonInput,
+    IonIcon,
   ],
   templateUrl: './add-food-dialog.component.html',
   styleUrl: './add-food-dialog.component.scss',
 })
 export class AddFoodDialogComponent {
-  private readonly dialogRef = inject(MatDialogRef<AddFoodDialogComponent>);
+  private readonly modal = inject(IonModalToken, { optional: true });
   private readonly fb = inject(FormBuilder);
 
   readonly form = this.fb.group({
@@ -43,7 +64,7 @@ export class AddFoodDialogComponent {
     const v = this.form.getRawValue();
     const name = (v.name ?? '').trim();
     if (!name) return;
-    this.dialogRef.close({
+    this.modal?.dismiss({
       name,
       calories: Number(v.calories) || 0,
       sodium: Number(v.sodium) || 0,
@@ -56,6 +77,6 @@ export class AddFoodDialogComponent {
   }
 
   cancel(): void {
-    this.dialogRef.close();
+    this.modal?.dismiss();
   }
 }

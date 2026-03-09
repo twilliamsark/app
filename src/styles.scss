@@ -1,35 +1,45 @@
-@use '@angular/material' as mat;
+/* Ionic core (required) */
+@import '@ionic/angular/css/core.css';
+@import '@ionic/angular/css/normalize.css';
+@import '@ionic/angular/css/structure.css';
+@import '@ionic/angular/css/typography.css';
+@import '@ionic/angular/css/display.css';
+@import '@ionic/angular/css/padding.css';
+@import '@ionic/angular/css/float-elements.css';
+@import '@ionic/angular/css/text-alignment.css';
+@import '@ionic/angular/css/text-transformation.css';
+@import '@ionic/angular/css/flex-utils.css';
 
-$theme: mat.define-theme((
-  color: (
-    primary: mat.$violet-palette,
-    theme-type: dark,
-  ),
-  typography: (
-    plain-family: 'DM Sans',
-  ),
-  density: ( scale: 0 ),
-));
-
-@include mat.core();
-html {
-  @include mat.theme($theme);
-  color-scheme: dark;
+/* Dark theme */
+html.ion-palette-dark,
+body.dark {
+  --ion-background-color: #0f1114;
+  --ion-background-color-rgb: 15, 17, 20;
+  --ion-text-color: #e8eaed;
+  --ion-text-color-rgb: 232, 234, 237;
+  --ion-color-primary: #7c4dff;
+  --ion-color-primary-rgb: 124, 77, 255;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-border-color: rgba(255, 255, 255, 0.12);
+  --ion-toolbar-background: #1a1d21;
+  --ion-toolbar-color: #e8eaed;
+  --ion-card-background: #1a1d21;
 }
-@include mat.all-component-themes($theme);
 
-:root {
-  --mat-toolbar-container-background-color: #1a1d21;
-  --mat-toolbar-container-text-color: #e8eaed;
-}
-
-html, body {
+html,
+body {
   height: 100%;
+  margin: 0;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--ion-background-color, #0f1114);
+  color: var(--ion-text-color, #e8eaed);
+  color-scheme: dark;
 }
 
 body {
-  margin: 0;
-  font-family: 'DM Sans', system-ui, sans-serif;
-  background: #0f1114;
-  color: #e8eaed;
+  --ion-background-color: #0f1114;
+  --ion-text-color: #e8eaed;
+  --ion-color-primary: #7c4dff;
+  --ion-toolbar-background: #1a1d21;
+  --ion-toolbar-color: #e8eaed;
 }
